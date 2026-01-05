@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Espace - Data Clean</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#2563eb', secondary: '#10b981', dark: '#0f172a', surface: '#f8fafc' },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .precision-grid { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 24px 24px; }
+        .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .data-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body class="min-h-screen bg-surface precision-grid">
+    <!-- NAV -->
+    <nav class="sticky top-0 z-50 glass-effect border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-primary rounded-lg">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <span class="text-lg font-extrabold text-slate-900">Data <span class="text-primary">Clean</span></span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="userName" class="text-sm font-semibold text-slate-600"></span>
+                    <button onclick="logout()" class="text-sm font-semibold text-red-600 hover:text-red-700">Déconnexion</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- UPLOAD SECTION -->
+        <div class="glass-effect rounded-2xl p-8 mb-8 shadow-xl border border-slate-200">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+                <div class="p-2 bg-primary/10 rounded-lg">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">📤 Importer mes données du mois</h2>
+            </div>
+            
+            <div id="dropZone" class="border-3 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary transition-all hover:bg-slate-50">
+                <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <p class="text-lg font-semibold text-slate-700 mb-2">Glissez-déposez votre fichier Excel ici</p>
+                <p class="text-sm text-slate-500 mb-4">ou cliquez pour sélectionner</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                <button onclick="document.getElementById('fileInput').click()" class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                    Choisir un fichier
+                </button>
+            </div>
+            
+            <div id="uploadStatus" class="mt-4 hidden"></div>
+            <div id="lastUpload" class="mt-4 text-sm text-slate-600"></div>
+        </div>
+
+        <!-- DASHBOARDS SECTION -->
+        <div class="glass-effect rounded-2xl p-8 shadow-xl border border-slate-200">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+                <div class="p-2 bg-secondary/10 rounded-lg">
+                    <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">📊 Mes tableaux de bord</h2>
+            </div>
+            
+            <div id="dashboardsList" class="space-y-4">
+                <div class="text-center py-12 text-slate-500">
+                    <svg class="w-20 h-20 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p class="text-lg font-semibold">Aucun tableau de bord disponible</p>
+                    <p class="text-sm">Commencez par envoyer vos données !</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        const SUPABASE_URL = 'https://xkrjtaqphzuwjwnsibzf.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrcmp0YXFwaHp1d2p3bnNpYnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTYwOTgsImV4cCI6MjA4MzE5MjA5OH0.n7crc4kNbMrR4kHp-66XVlhufS4-2qp329cqvTt8hR8';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Check auth
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) window.location.href = 'login.html';
+
+        // Load user data
+        const { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single();
+        document.getElementById('userName').textContent = userData?.laverie_name || 'Client';
+
+        // File upload
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-primary', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-primary', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file) await uploadFile(file);
+        });
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) await uploadFile(file);
+        });
+
+        async function uploadFile(file) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.className = 'mt-4 p-4 bg-blue-100 text-blue-800 rounded-lg';
+            statusDiv.textContent = '📤 Envoi en cours...';
+            statusDiv.classList.remove('hidden');
+
+            try {
+                // Upload to Supabase Storage
+                const fileName = `${user.id}/${Date.now()}_${file.name}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('client-uploads')
+                    .upload(fileName, file);
+
+                if (uploadError) throw uploadError;
+
+                // Save to database
+                const { error: dbError } = await supabase.from('files').insert({
+                    user_id: user.id,
+                    filename: fileName,
+                    original_name: file.name,
+                    file_path: uploadData.path
+                });
+
+                if (dbError) throw dbError;
+
+                // Create pending dashboard
+                const period = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                await supabase.from('dashboards').insert({
+                    user_id: user.id,
+                    period: period,
+                    status: 'pending'
+                });
+
+                statusDiv.className = 'mt-4 p-4 bg-green-100 text-green-800 rounded-lg';
+                statusDiv.textContent = '✅ Fichier envoyé avec succès ! Vous recevrez un email dès que votre dashboard sera prêt.';
+                
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                    loadDashboards();
+                }, 3000);
+
+            } catch (error) {
+                statusDiv.className = 'mt-4 p-4 bg-red-100 text-red-800 rounded-lg';
+                statusDiv.textContent = '❌ Erreur: ' + error.message;
+            }
+        }
+
+        // Load dashboards
+        async function loadDashboards() {
+            const { data: dashboards } = await supabase
+                .from('dashboards')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('dashboardsList');
+            
+            if (!dashboards || dashboards.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-500">
+                        <svg class="w-20 h-20 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-lg font-semibold">Aucun tableau de bord disponible</p>
+                        <p class="text-sm">Commencez par envoyer vos données !</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = dashboards.map(dash => `
+                <div class="p-6 bg-white rounded-xl border-2 ${dash.status === 'published' ? 'border-secondary' : 'border-slate-200'} data-card-hover transition-all">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-bold text-slate-900">📅 ${dash.period}</h3>
+                                ${dash.status === 'published' 
+                                    ? '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">🟢 Disponible</span>'
+                                    : '<span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">🟡 En cours</span>'}
+                            </div>
+                            <p class="text-sm text-slate-500">
+                                ${dash.published_at ? `Publié le ${new Date(dash.published_at).toLocaleDateString('fr-FR')}` : 'En cours de création...'}
+                            </p>
+                        </div>
+                        ${dash.status === 'published' ? `
+                            <div class="flex gap-3">
+                                <button onclick="viewDashboard('${dash.id}')" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                                    📄 Voir
+                                </button>
+                                <button onclick="downloadDashboard('${dash.id}')" class="px-4 py-2 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all">
+                                    ⬇️ Télécharger
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.viewDashboard = async function(id) {
+            const { data } = await supabase.from('dashboards').select('dashboard_path').eq('id', id).single();
+            if (data?.dashboard_path) {
+                const { data: urlData } = await supabase.storage.from('dashboards').createSignedUrl(data.dashboard_path, 3600);
+                window.open(urlData.signedUrl, '_blank');
+            }
+        }
+
+        window.downloadDashboard = async function(id) {
+            const { data } = await supabase.from('dashboards').select('dashboard_path, period').eq('id', id).single();
+            if (data?.dashboard_path) {
+                const { data: urlData } = await supabase.storage.from('dashboards').download(data.dashboard_path);
+                const url = URL.createObjectURL(urlData);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `dashboard-${data.period}.pdf`;
+                a.click();
+            }
+        }
+
+        window.logout = async function() {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        loadDashboards();
+    </script>
+</body>
+</html>
