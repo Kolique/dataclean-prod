@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" class="scroll-smooth">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,105 +7,78 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { primary: '#2563eb', secondary: '#10b981', dark: '#0f172a', surface: '#f8fafc' },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { primary: '#2563eb', secondary: '#10b981' }, fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
     </script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .precision-grid { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 24px 24px; }
         .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .data-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
     </style>
 </head>
-<body class="min-h-screen bg-surface precision-grid">
-    <!-- NAV -->
-    <nav class="sticky top-0 z-50 glass-effect border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-primary rounded-lg">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    </div>
-                    <span class="text-lg font-extrabold text-slate-900">Data <span class="text-primary">Clean</span></span>
-                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">ADMIN</span>
+<body class="min-h-screen bg-slate-50 precision-grid">
+    <nav class="sticky top-0 z-50 glass-effect border-b">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-primary rounded-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 </div>
-                <button onclick="logout()" class="text-sm font-semibold text-red-600 hover:text-red-700">Déconnexion</button>
+                <span class="text-lg font-extrabold">Data <span class="text-primary">Clean</span></span>
+                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">ADMIN</span>
             </div>
+            <button onclick="logout()" class="text-sm font-semibold text-red-600">Déconnexion</button>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <main class="max-w-7xl mx-auto px-4 py-12">
         <!-- STATS -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="glass-effect rounded-xl p-6 border border-slate-200 data-card-hover transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold text-slate-600">Clients actifs</span>
-                    <div class="p-2 bg-primary/10 rounded-lg">
-                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-slate-900" id="totalClients">0</div>
+        <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="glass-effect rounded-xl p-6 border">
+                <p class="text-sm text-slate-600 mb-2">👥 Clients</p>
+                <p class="text-3xl font-extrabold" id="totalClients">0</p>
             </div>
-
-            <div class="glass-effect rounded-xl p-6 border border-slate-200 data-card-hover transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold text-slate-600">Fichiers reçus</span>
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-slate-900" id="filesReceived">0</div>
+            <div class="glass-effect rounded-xl p-6 border">
+                <p class="text-sm text-slate-600 mb-2">📥 Fichiers reçus</p>
+                <p class="text-3xl font-extrabold" id="filesReceived">0</p>
             </div>
-
-            <div class="glass-effect rounded-xl p-6 border border-slate-200 data-card-hover transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold text-slate-600">En attente</span>
-                    <div class="p-2 bg-amber-100 rounded-lg">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-slate-900" id="pendingDashboards">0</div>
+            <div class="glass-effect rounded-xl p-6 border border-amber-200 bg-amber-50">
+                <p class="text-sm text-amber-800 mb-2">⏳ En attente</p>
+                <p class="text-3xl font-extrabold text-amber-900" id="pendingFiles">0</p>
             </div>
-
-            <div class="glass-effect rounded-xl p-6 border border-slate-200 data-card-hover transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold text-slate-600">Publiés</span>
-                    <div class="p-2 bg-green-100 rounded-lg">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-slate-900" id="publishedDashboards">0</div>
+            <div class="glass-effect rounded-xl p-6 border border-green-200 bg-green-50">
+                <p class="text-sm text-green-800 mb-2">✅ Publiés</p>
+                <p class="text-3xl font-extrabold text-green-900" id="publishedDashboards">0</p>
             </div>
         </div>
 
-        <!-- CLIENTS LIST -->
-        <div class="glass-effect rounded-2xl p-8 shadow-xl border border-slate-200">
-            <h2 class="text-2xl font-bold text-slate-900 mb-6">📋 Liste des clients</h2>
-            <div id="clientsList" class="space-y-4"></div>
+        <!-- PENDING FILES ALERT -->
+        <div id="pendingAlert" class="hidden mb-8 p-6 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <div>
+                    <p class="font-bold text-amber-900 text-lg">⚠️ Fichiers en attente de traitement</p>
+                    <p class="text-amber-800 mt-1" id="pendingMessage"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENTS -->
+        <div class="glass-effect rounded-2xl p-8 border">
+            <h2 class="text-2xl font-bold mb-6">📋 Clients et fichiers</h2>
+            <div id="clientsList"></div>
         </div>
     </main>
 
-    <!-- UPLOAD MODAL -->
+    <!-- MODAL -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-8 max-w-md w-full shadow-2xl border border-slate-200">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-slate-900">Publier le dashboard</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+        <div class="glass-effect rounded-2xl p-8 max-w-md w-full">
+            <div class="flex justify-between mb-6">
+                <h3 class="text-2xl font-bold">Publier dashboard</h3>
+                <button onclick="closeModal()" class="text-slate-400">×</button>
             </div>
             <input type="file" id="dashboardFile" accept=".pdf" class="hidden">
-            <div onclick="document.getElementById('dashboardFile').click()" class="border-3 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary transition-all hover:bg-slate-50">
-                <svg class="w-12 h-12 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                <p class="font-semibold text-slate-700">Cliquez pour choisir le PDF</p>
+            <div onclick="document.getElementById('dashboardFile').click()" class="border-3 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary">
+                <p class="font-semibold">Cliquez pour choisir le PDF</p>
             </div>
             <div id="uploadProgress" class="mt-4"></div>
         </div>
@@ -117,89 +90,68 @@
         const { createClient } = window.supabase;
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentClientId = null;
+        let currentFileId = null;
 
-        // Check auth and admin role
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) window.location.href = 'login.html';
 
         const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
         if (userData?.role !== 'admin') window.location.href = 'dashboard.html';
 
-        // Load stats
         async function loadStats() {
             const { count: clients } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'client');
             const { count: files } = await supabase.from('files').select('*', { count: 'exact', head: true });
-            const { count: pending } = await supabase.from('dashboards').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+            const { count: pending } = await supabase.from('files').select('*', { count: 'exact', head: true }).is('dashboard_id', null);
             const { count: published } = await supabase.from('dashboards').select('*', { count: 'exact', head: true }).eq('status', 'published');
 
             document.getElementById('totalClients').textContent = clients || 0;
             document.getElementById('filesReceived').textContent = files || 0;
-            document.getElementById('pendingDashboards').textContent = pending || 0;
+            document.getElementById('pendingFiles').textContent = pending || 0;
             document.getElementById('publishedDashboards').textContent = published || 0;
+
+            if (pending > 0) {
+                document.getElementById('pendingAlert').classList.remove('hidden');
+                document.getElementById('pendingMessage').textContent = `Vous avez ${pending} fichier${pending > 1 ? 's' : ''} en attente de traitement. Téléchargez-le${pending > 1 ? 's' : ''} et créez le${pending > 1 ? 's' : ''} dashboard${pending > 1 ? 's' : ''} !`;
+            }
         }
 
-        // Load clients
         async function loadClients() {
-            const { data: clients } = await supabase
-                .from('users')
-                .select('*, files(*), dashboards(*)')
-                .eq('role', 'client')
-                .order('created_at', { ascending: false });
-
+            const { data: clients } = await supabase.from('users').select('*, files(*)').eq('role', 'client').order('created_at', { ascending: false });
             const container = document.getElementById('clientsList');
             
-            if (!clients || clients.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-slate-500">Aucun client pour le moment</div>';
-                return;
-            }
+            if (!clients?.length) { container.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun client</p>'; return; }
 
             container.innerHTML = clients.map(client => {
-                const hasFile = client.files?.length > 0;
-                const latestFile = hasFile ? client.files[client.files.length - 1] : null;
-                const latestDash = client.dashboards?.length > 0 ? client.dashboards[client.dashboards.length - 1] : null;
-                const status = !hasFile ? 'waiting' : (latestDash?.status === 'published' ? 'ready' : 'file_received');
-
+                const pendingFiles = client.files?.filter(f => !f.dashboard_id) || [];
                 return `
-                    <div class="p-6 bg-white rounded-xl border-2 ${hasFile ? 'border-green-200 bg-green-50' : 'border-slate-200'} data-card-hover transition-all">
-                        <div class="flex items-start justify-between mb-4">
+                    <div class="p-6 bg-white rounded-xl border-2 ${pendingFiles.length > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200'} mb-4">
+                        <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h3 class="text-xl font-bold text-slate-900">${client.laverie_name}</h3>
+                                <h3 class="text-xl font-bold">${client.laverie_name}</h3>
                                 <p class="text-sm text-slate-500">${client.email}</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                                status === 'waiting' ? 'bg-red-100 text-red-800' :
-                                status === 'file_received' ? 'bg-amber-100 text-amber-800' :
-                                'bg-green-100 text-green-800'
-                            }">
-                                ${status === 'waiting' ? '⚠️ Attente fichier' :
-                                  status === 'file_received' ? '📥 Fichier reçu' :
-                                  '✅ Dashboard prêt'}
-                            </span>
+                            ${pendingFiles.length > 0 ? `<span class="px-3 py-1 bg-amber-200 text-amber-900 rounded-full text-xs font-bold">⚠️ ${pendingFiles.length} fichier${pendingFiles.length > 1 ? 's' : ''} en attente</span>` : ''}
                         </div>
-                        
-                        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-                            <div>
-                                <span class="text-slate-500">Fichier reçu :</span>
-                                <span class="font-semibold">${latestFile ? new Date(latestFile.upload_date).toLocaleDateString('fr-FR') : 'Aucun'}</span>
+                        ${client.files?.length > 0 ? `
+                            <div class="space-y-2">
+                                <p class="font-semibold text-sm text-slate-700 mb-2">📁 Fichiers uploadés :</p>
+                                ${client.files.map(file => `
+                                    <div class="p-3 bg-slate-50 rounded-lg border ${!file.dashboard_id ? 'border-amber-300' : 'border-slate-200'}">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <p class="font-semibold text-sm">${file.original_name}</p>
+                                                <p class="text-xs text-slate-600 mt-1">${file.description}</p>
+                                                <p class="text-xs text-slate-400 mt-1">${new Date(file.upload_date).toLocaleString('fr-FR')}</p>
+                                            </div>
+                                            <div class="flex gap-2 ml-4">
+                                                <button onclick="downloadFile('${file.file_path}')" class="px-3 py-1 bg-primary text-white rounded text-xs font-semibold">📥 Télécharger</button>
+                                                ${!file.dashboard_id ? `<button onclick="openUploadModal('${file.id}', '${client.id}')" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-semibold">📤 Publier Dashboard</button>` : '<span class="text-xs text-green-600 font-semibold">✅ Traité</span>'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
-                            <div>
-                                <span class="text-slate-500">Dashboard créé :</span>
-                                <span class="font-semibold">${latestDash?.status === 'published' ? 'Oui ✅' : 'Non ❌'}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-3 flex-wrap">
-                            ${hasFile ? `<button onclick="downloadFile('${latestFile.file_path}')" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm">
-                                📥 Télécharger Excel
-                            </button>` : ''}
-                            <button onclick="openUploadModal('${client.id}')" class="px-4 py-2 bg-secondary text-white rounded-lg font-semibold hover:bg-green-700 transition-all text-sm">
-                                📤 Publier dashboard
-                            </button>
-                            ${latestDash?.status === 'published' && !latestDash.notified ? `<button onclick="notifyClient('${client.id}')" class="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all text-sm">
-                                ✉️ Notifier client
-                            </button>` : ''}
-                        </div>
+                        ` : '<p class="text-sm text-slate-500">Aucun fichier uploadé</p>'}
                     </div>
                 `;
             }).join('');
@@ -214,8 +166,9 @@
             a.click();
         }
 
-        window.openUploadModal = function(clientId) {
-            currentClientId = clientId;
+        window.openUploadModal = function(fileId, clientId) {
+            currentFileId = fileId;
+            window.currentClientId = clientId;
             document.getElementById('uploadModal').classList.remove('hidden');
         }
 
@@ -231,74 +184,43 @@
 
             const progress = document.getElementById('uploadProgress');
             progress.className = 'p-4 bg-blue-100 text-blue-800 rounded-lg';
-            progress.textContent = '📤 Upload en cours...';
+            progress.textContent = '📤 Upload...';
 
             try {
-                // Upload PDF
-                const fileName = `${currentClientId}/${Date.now()}_${file.name}`;
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('dashboards')
-                    .upload(fileName, file);
-
+                const fileName = `${window.currentClientId}/${Date.now()}_${file.name}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage.from('dashboards').upload(fileName, file);
                 if (uploadError) throw uploadError;
 
-                // Update dashboard
                 const period = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                const { error: dbError } = await supabase
-                    .from('dashboards')
-                    .update({ 
-                        status: 'published', 
-                        dashboard_path: uploadData.path,
-                        published_at: new Date().toISOString()
-                    })
-                    .eq('user_id', currentClientId)
-                    .eq('status', 'pending')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
+                const { data: dashData, error: dashError } = await supabase.from('dashboards').insert({ 
+                    user_id: window.currentClientId,
+                    file_id: currentFileId,
+                    period: period,
+                    status: 'published',
+                    dashboard_path: uploadData.path,
+                    published_at: new Date().toISOString()
+                }).select().single();
 
-                if (dbError) throw dbError;
+                if (dashError) throw dashError;
+
+                await supabase.from('files').update({ dashboard_id: dashData.id }).eq('id', currentFileId);
 
                 progress.className = 'p-4 bg-green-100 text-green-800 rounded-lg';
-                progress.textContent = '✅ Dashboard publié avec succès !';
+                progress.textContent = '✅ Dashboard publié !';
 
-                setTimeout(() => {
-                    closeModal();
-                    loadStats();
-                    loadClients();
-                }, 1500);
+                setTimeout(() => { closeModal(); loadStats(); loadClients(); }, 1500);
 
             } catch (error) {
                 progress.className = 'p-4 bg-red-100 text-red-800 rounded-lg';
-                progress.textContent = '❌ Erreur: ' + error.message;
+                progress.textContent = '❌ ' + error.message;
             }
         });
 
-        window.notifyClient = async function(clientId) {
-            if (!confirm('Envoyer l\'email de notification au client ?')) return;
-
-            try {
-                await supabase
-                    .from('dashboards')
-                    .update({ notified: true })
-                    .eq('user_id', clientId)
-                    .eq('status', 'published')
-                    .eq('notified', false);
-
-                // TODO: Intégrer Resend pour envoyer l'email réel
-                alert('✅ Notification envoyée ! (à configurer avec Resend)');
-                loadClients();
-            } catch (error) {
-                alert('❌ Erreur: ' + error.message);
-            }
-        }
-
-        window.logout = async function() {
-            await supabase.auth.signOut();
-            window.location.href = 'index.html';
-        }
+        window.logout = async function() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
 
         loadStats();
         loadClients();
+        setInterval(loadStats, 30000); // Refresh every 30s
     </script>
 </body>
 </html>
