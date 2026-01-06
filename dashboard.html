@@ -108,72 +108,111 @@
             monthSelect.add(option);
         }
 
-        async function checkUploadStatus() {
-            const selectedMonth = monthSelect.value;
-            
-            // Compter les dashboards publiés
-            const { data: publishedDashboards } = await supabase
-                .from('dashboards')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('status', 'published');
+       async function checkUploadStatus() {
+    const selectedMonth = monthSelect.value;
+    
+    // Compter les dashboards publiés
+    const { data: publishedDashboards } = await supabase
+        .from('dashboards')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'published');
 
-            const dashboardCount = publishedDashboards?.length || 0;
-            
-            // Vérifier subscriptions
-            const { data: subs } = await supabase
-                .from('subscriptions')
-                .select('*')
-                .eq('user_id', user.id);
+    const dashboardCount = publishedDashboards?.length || 0;
+    
+    const statusDiv = document.getElementById('subscriptionStatus');
+    const uploadSection = document.getElementById('uploadSection');
 
-            const statusDiv = document.getElementById('subscriptionStatus');
-            const uploadSection = document.getElementById('uploadSection');
+    // CAS 1 : Aucun dashboard reçu = GRATUIT pour n'importe quel mois
+    if (dashboardCount === 0) {
+        statusDiv.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="flex-1">
+                    <p class="font-bold text-green-900 text-lg">🎉 Période d'essai gratuite !</p>
+                    <p class="text-sm text-green-700">Uploadez librement vos fichiers. Votre premier dashboard sera gratuit.</p>
+                </div>
+            </div>
+        `;
+        statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-green-300 bg-green-50';
+        uploadSection.style.display = 'block';
+        return true;
+    }
 
-            // CAS 1 : Aucun dashboard reçu = GRATUIT
-            if (dashboardCount === 0) {
-                statusDiv.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="p-3 bg-green-100 rounded-lg">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-bold text-green-900 text-lg">🎉 Premier dashboard GRATUIT !</p>
-                            <p class="text-sm text-green-700">Uploadez vos fichiers pour n'importe quel mois. Votre premier dashboard est offert.</p>
-                        </div>
+    // CAS 2 : A déjà reçu au moins 1 dashboard
+    // Vérifier si le mois sélectionné est payé OU si c'est le mois du 1er dashboard gratuit
+    const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id);
+
+    const monthSub = subs?.find(s => s.month === selectedMonth);
+
+    // Si le mois a un dashboard "completed" et que c'était le 1er gratuit
+    if (monthSub?.status === 'completed' && monthSub?.is_first_free) {
+        statusDiv.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="font-bold text-blue-900">✅ ${formatMonth(selectedMonth)} - Dashboard gratuit reçu</p>
+                    <p class="text-sm text-blue-700">Ce mois était votre essai gratuit.</p>
+                </div>
+            </div>
+        `;
+        statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-blue-300 bg-blue-50';
+        uploadSection.style.display = 'none';
+        return false;
+    }
+
+    // Si pas d'abonnement pour ce mois OU completed (déjà traité)
+    if (!monthSub || monthSub.status === 'completed') {
+        const monthLabel = formatMonth(selectedMonth);
+        statusDiv.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-red-100 rounded-lg">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
-                `;
-                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-green-300 bg-green-50';
-                uploadSection.style.display = 'block';
-                return true;
-            }
-
-            // CAS 2 : A déjà reçu au moins 1 dashboard
-            const monthSub = subs?.find(s => s.month === selectedMonth);
-
-            if (!monthSub || monthSub.status === 'completed') {
-                const monthLabel = formatMonth(selectedMonth);
-                statusDiv.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="p-3 bg-red-100 rounded-lg">
-                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-lg font-bold text-red-900">⚠️ Paiement requis pour ${monthLabel}</p>
-                                <p class="text-sm text-red-700">Vous avez déjà reçu ${dashboardCount} dashboard${dashboardCount > 1 ? 's' : ''}. Payez 99€ pour continuer.</p>
-                            </div>
-                        </div>
-                        <button onclick="payForMonth('${selectedMonth}')" class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 whitespace-nowrap flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                            Payer 99€
-                        </button>
+                    <div>
+                        <p class="text-lg font-bold text-red-900">⚠️ Paiement requis pour ${monthLabel}</p>
+                        <p class="text-sm text-red-700">Vous avez déjà reçu ${dashboardCount} dashboard${dashboardCount > 1 ? 's' : ''}. Payez 99€ pour continuer.</p>
                     </div>
-                `;
-                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-red-300 bg-red-50';
-                uploadSection.style.display = 'none';
-                return false;
-            }
+                </div>
+                <button onclick="payForMonth('${selectedMonth}')" class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 whitespace-nowrap flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    Payer 99€
+                </button>
+            </div>
+        `;
+        statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-red-300 bg-red-50';
+        uploadSection.style.display = 'none';
+        return false;
+    }
 
+    // Mois payé et disponible
+    if (monthSub.status === 'available') {
+        statusDiv.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="font-bold text-blue-900">✅ ${formatMonth(selectedMonth)} - Payé</p>
+                    <p class="text-sm text-blue-700">Vous pouvez uploader vos fichiers pour ce mois.</p>
+                </div>
+            </div>
+        `;
+        statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-blue-300 bg-blue-50';
+        uploadSection.style.display = 'block';
+        return true;
+    }
+
+    return false;
+}
             // CAS 3 : Mois payé et disponible
             if (monthSub.status === 'available') {
                 statusDiv.innerHTML = `
