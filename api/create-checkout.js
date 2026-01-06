@@ -1,7 +1,8 @@
+// api/create-checkout.js
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 module.exports = async (req, res) => {
-  // Permettre CORS
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,22 +15,32 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // DEBUG: Vérifier si la clé existe
+  // DEBUG: Vérifier les variables d'environnement
+  console.log('=== DEBUG CREATE CHECKOUT ===');
   console.log('STRIPE_SECRET_KEY existe ?', !!process.env.STRIPE_SECRET_KEY);
-  console.log('STRIPE_SECRET_KEY commence par sk_test ?', process.env.STRIPE_SECRET_KEY?.startsWith('sk_test'));
+  console.log('STRIPE_SECRET_KEY commence par sk_ ?', process.env.STRIPE_SECRET_KEY?.startsWith('sk_'));
+  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
+  // Vérifier que la clé Stripe existe
   if (!process.env.STRIPE_SECRET_KEY) {
-    return res.status(500).json({ error: 'STRIPE_SECRET_KEY not configured' });
+    console.error('❌ STRIPE_SECRET_KEY is not defined in environment variables');
+    return res.status(500).json({ 
+      error: 'Configuration error: STRIPE_SECRET_KEY not found',
+      debug: 'Check Vercel environment variables'
+    });
   }
 
   try {
     const { userId, month, monthLabel, userEmail, laverieName } = req.body;
 
+    console.log('Request body:', { userId, month, monthLabel, userEmail, laverieName });
+
     if (!userId || !month || !monthLabel) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Créer la session Stripe Checkout
+    // Créer la session Stripe
+    console.log('Creating Stripe checkout session...');
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -40,7 +51,7 @@ module.exports = async (req, res) => {
               name: `Dashboard Data Clean - ${monthLabel}`,
               description: `Accès au dashboard pour ${monthLabel}`,
             },
-            unit_amount: 9900,
+            unit_amount: 9900, // 99.00 EUR
           },
           quantity: 1,
         },
@@ -57,10 +68,15 @@ module.exports = async (req, res) => {
       },
     });
 
+    console.log('✅ Session created:', session.id);
     return res.status(200).json({ sessionId: session.id });
 
   } catch (error) {
-    console.error('Stripe error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('❌ Stripe error:', error);
+    return res.status(500).json({ 
+      error: error.message,
+      type: error.type,
+      code: error.code
+    });
   }
 };
