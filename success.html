@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement réussi - Data Clean</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .precision-grid { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 24px 24px; }
+        .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 precision-grid flex items-center justify-center p-4">
+    <div class="glass-effect rounded-2xl p-8 max-w-md w-full border shadow-2xl text-center">
+        <div class="mb-6">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">✅ Paiement réussi !</h1>
+            <p class="text-slate-600">Votre paiement a été traité avec succès.</p>
+        </div>
+
+        <div id="paymentDetails" class="mb-6 p-4 bg-blue-50 rounded-lg text-left">
+            <p class="text-sm text-blue-800 mb-2"><strong>Montant payé :</strong> 99,00 €</p>
+            <p class="text-sm text-blue-800" id="monthInfo"><strong>Pour le mois :</strong> Chargement...</p>
+        </div>
+
+        <div class="space-y-3">
+            <a href="dashboard.html" class="block w-full px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 transition-all">
+                📤 Uploader mes fichiers
+            </a>
+            <a href="dashboard.html" class="block w-full px-6 py-3 border-2 border-primary text-primary rounded-lg font-bold hover:bg-primary hover:text-white transition-all">
+                🏠 Retour au dashboard
+            </a>
+        </div>
+
+        <p class="text-xs text-slate-500 mt-6">
+            Un email de confirmation a été envoyé à votre adresse.
+        </p>
+    </div>
+
+    <script type="module">
+        const SUPABASE_URL = 'https://xkrjtaqphzuwjwnsibzf.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrcmp0YXFwaHp1d2p3bnNpYnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTYwOTgsImV4cCI6MjA4MzE5MjA5OH0.n7crc4kNbMrR4kHp-66XVlhufS4-2qp329cqvTt8hR8';
+        
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Récupérer les paramètres de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const month = urlParams.get('month');
+        const sessionId = urlParams.get('session_id');
+
+        if (month) {
+            const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            const [year, monthNum] = month.split('-');
+            const monthLabel = `${months[parseInt(monthNum) - 1]} ${year}`;
+            
+            document.getElementById('monthInfo').innerHTML = `<strong>Pour le mois :</strong> ${monthLabel}`;
+        }
+
+        // Vérifier que l'utilisateur est connecté
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

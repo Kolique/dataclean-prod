@@ -34,9 +34,6 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 py-12">
-        <!-- DEBUG INFO -->
-        <div id="debugInfo" class="mb-4 p-4 bg-gray-100 rounded-lg text-xs font-mono hidden"></div>
-
         <!-- SUBSCRIPTION STATUS -->
         <div id="subscriptionStatus" class="glass-effect rounded-2xl p-6 mb-8 border"></div>
 
@@ -84,6 +81,7 @@
         const SUPABASE_URL = 'https://xkrjtaqphzuwjwnsibzf.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrcmp0YXFwaHp1d2p3bnNpYnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTYwOTgsImV4cCI6MjA4MzE5MjA5OH0.n7crc4kNbMrR4kHp-66XVlhufS4-2qp329cqvTt8hR8';
         const STRIPE_PUBLISHABLE_KEY = 'pk_test_51SFc02RddQAvEuauFuRSqt3PsxPm9qsQI12lIQa1CQYb1B6MvhcfbMUmtJqEsgEvepHQHsPUFljnAGcGW2Ln2wDv00XEtLATkM';
+        const BACKEND_URL = 'dataclean-prod.vercel.app'; // https://votre-projet.vercel.app
         
         const { createClient } = window.supabase;
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -113,37 +111,20 @@
         async function checkUploadStatus() {
             const selectedMonth = monthSelect.value;
             
-            // MÉTHODE 1 : Compter les dashboards publiés
-            const { data: publishedDashboards, error: dashError } = await supabase
+            // Compter les dashboards publiés
+            const { data: publishedDashboards } = await supabase
                 .from('dashboards')
                 .select('id')
                 .eq('user_id', user.id)
                 .eq('status', 'published');
 
-            if (dashError) {
-                console.error('Erreur dashboards:', dashError);
-            }
-
             const dashboardCount = publishedDashboards?.length || 0;
             
-            // MÉTHODE 2 : Vérifier subscriptions
-            const { data: subs, error: subError } = await supabase
+            // Vérifier subscriptions
+            const { data: subs } = await supabase
                 .from('subscriptions')
                 .select('*')
                 .eq('user_id', user.id);
-
-            if (subError) {
-                console.error('Erreur subscriptions:', subError);
-            }
-
-            // DEBUG
-            const debugDiv = document.getElementById('debugInfo');
-            debugDiv.innerHTML = `
-                <strong>DEBUG:</strong><br>
-                Dashboards publiés: ${dashboardCount}<br>
-                Subscriptions: ${JSON.stringify(subs, null, 2)}
-            `;
-            debugDiv.classList.remove('hidden');
 
             const statusDiv = document.getElementById('subscriptionStatus');
             const uploadSection = document.getElementById('uploadSection');
@@ -167,7 +148,6 @@
             }
 
             // CAS 2 : A déjà reçu au moins 1 dashboard
-            // Vérifier si le mois sélectionné est disponible
             const monthSub = subs?.find(s => s.month === selectedMonth);
 
             if (!monthSub || monthSub.status === 'completed') {
@@ -216,28 +196,37 @@
         }
 
         window.payForMonth = async function(month) {
-            if (!confirm(`Payer 99€ pour ${formatMonth(month)} ?`)) return;
+            const monthLabel = formatMonth(month);
+            
+            if (!confirm(`Payer 99€ pour ${monthLabel} ?\n\nVous allez être redirigé vers Stripe pour effectuer le paiement.`)) return;
             
             try {
-                alert('Redirection vers Stripe...\n\n(À configurer)');
-                
-                const { error } = await supabase.from('subscriptions').insert({
-                    user_id: user.id,
-                    month: month,
-                    status: 'available',
-                    payment_method: 'stripe',
-                    paid_at: new Date().toISOString(),
-                    amount: 99.00,
-                    is_first_free: false
+                // Appeler le backend Vercel pour créer la session Stripe
+                const response = await fetch(`${BACKEND_URL}/api/create-checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        month: month,
+                        monthLabel: monthLabel,
+                        userEmail: userData.email,
+                        laverieName: userData.laverie_name
+                    })
                 });
 
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la création de la session de paiement');
+                }
+
+                const { sessionId } = await response.json();
+                
+                // Rediriger vers Stripe Checkout
+                const { error } = await stripe.redirectToCheckout({ sessionId });
+                
                 if (error) throw error;
                 
-                alert('✅ Paiement effectué !');
-                checkUploadStatus();
-                
             } catch (error) {
-                alert('Erreur : ' + error.message);
+                alert('❌ Erreur : ' + error.message);
             }
         }
 
