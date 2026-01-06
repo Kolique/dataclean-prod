@@ -34,6 +34,9 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 py-12">
+        <!-- DEBUG INFO -->
+        <div id="debugInfo" class="mb-4 p-4 bg-gray-100 rounded-lg text-xs font-mono hidden"></div>
+
         <!-- SUBSCRIPTION STATUS -->
         <div id="subscriptionStatus" class="glass-effect rounded-2xl p-6 mb-8 border"></div>
 
@@ -42,7 +45,7 @@
             <h2 class="text-2xl font-bold mb-6">📤 Importer un nouveau fichier</h2>
             
             <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
-                <p class="text-sm text-amber-800">⚠️ N'uploadez que les fichiers Excel contenant vos données importantes.</p>
+                <p class="text-sm text-amber-800">⚠️ N'uploadez que les fichiers Excel importants.</p>
             </div>
 
             <div class="mb-6">
@@ -110,21 +113,43 @@
         async function checkUploadStatus() {
             const selectedMonth = monthSelect.value;
             
-            // Vérifier si premier dashboard gratuit déjà utilisé
-            const { data: completedSubs } = await supabase
+            // MÉTHODE 1 : Compter les dashboards publiés
+            const { data: publishedDashboards, error: dashError } = await supabase
+                .from('dashboards')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('status', 'published');
+
+            if (dashError) {
+                console.error('Erreur dashboards:', dashError);
+            }
+
+            const dashboardCount = publishedDashboards?.length || 0;
+            
+            // MÉTHODE 2 : Vérifier subscriptions
+            const { data: subs, error: subError } = await supabase
                 .from('subscriptions')
                 .select('*')
-                .eq('user_id', user.id)
-                .eq('status', 'completed')
-                .eq('is_first_free', true);
+                .eq('user_id', user.id);
 
-            const hasReceivedFirstDashboard = completedSubs && completedSubs.length > 0;
+            if (subError) {
+                console.error('Erreur subscriptions:', subError);
+            }
+
+            // DEBUG
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.innerHTML = `
+                <strong>DEBUG:</strong><br>
+                Dashboards publiés: ${dashboardCount}<br>
+                Subscriptions: ${JSON.stringify(subs, null, 2)}
+            `;
+            debugDiv.classList.remove('hidden');
 
             const statusDiv = document.getElementById('subscriptionStatus');
             const uploadSection = document.getElementById('uploadSection');
 
-            // CAS 1 : Premier dashboard gratuit pas encore utilisé
-            if (!hasReceivedFirstDashboard) {
+            // CAS 1 : Aucun dashboard reçu = GRATUIT
+            if (dashboardCount === 0) {
                 statusDiv.innerHTML = `
                     <div class="flex items-center gap-3">
                         <div class="p-3 bg-green-100 rounded-lg">
@@ -141,15 +166,10 @@
                 return true;
             }
 
-            // CAS 2 : Vérifier si le mois sélectionné est payé
-            const { data: monthSub } = await supabase
-                .from('subscriptions')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('month', selectedMonth)
-                .single();
+            // CAS 2 : A déjà reçu au moins 1 dashboard
+            // Vérifier si le mois sélectionné est disponible
+            const monthSub = subs?.find(s => s.month === selectedMonth);
 
-            // Pas d'abonnement pour ce mois = DOIT PAYER
             if (!monthSub || monthSub.status === 'completed') {
                 const monthLabel = formatMonth(selectedMonth);
                 statusDiv.innerHTML = `
@@ -160,7 +180,7 @@
                             </div>
                             <div>
                                 <p class="text-lg font-bold text-red-900">⚠️ Paiement requis pour ${monthLabel}</p>
-                                <p class="text-sm text-red-700">Votre premier dashboard gratuit a été utilisé. Payez 99€ pour continuer.</p>
+                                <p class="text-sm text-red-700">Vous avez déjà reçu ${dashboardCount} dashboard${dashboardCount > 1 ? 's' : ''}. Payez 99€ pour continuer.</p>
                             </div>
                         </div>
                         <button onclick="payForMonth('${selectedMonth}')" class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 whitespace-nowrap flex items-center gap-2">
@@ -199,10 +219,8 @@
             if (!confirm(`Payer 99€ pour ${formatMonth(month)} ?`)) return;
             
             try {
-                // TODO: Intégrer Stripe Checkout
-                alert('Redirection vers Stripe...\n\n(À configurer avec votre compte Stripe)');
+                alert('Redirection vers Stripe...\n\n(À configurer)');
                 
-                // Simuler le paiement
                 const { error } = await supabase.from('subscriptions').insert({
                     user_id: user.id,
                     month: month,
@@ -233,7 +251,10 @@
 
         async function uploadFile(file) {
             const canUpload = await checkUploadStatus();
-            if (!canUpload) return;
+            if (!canUpload) {
+                alert('❌ Vous devez payer pour uploader des fichiers pour ce mois !');
+                return;
+            }
 
             const description = document.getElementById('fileDescription').value.trim();
             const selectedMonth = monthSelect.value;
