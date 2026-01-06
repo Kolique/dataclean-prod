@@ -33,19 +33,18 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 py-12">
-        <!-- STATS -->
         <div class="grid grid-cols-4 gap-6 mb-8">
             <div class="glass-effect rounded-xl p-6 border">
-                <p class="text-sm text-slate-600 mb-2">👥 Clients actifs</p>
+                <p class="text-sm text-slate-600 mb-2">👥 Clients</p>
                 <p class="text-3xl font-extrabold" id="totalClients">0</p>
             </div>
             <div class="glass-effect rounded-xl p-6 border border-amber-200 bg-amber-50">
-                <p class="text-sm text-amber-800 mb-2">📥 Fichiers reçus</p>
+                <p class="text-sm text-amber-800 mb-2">📥 Fichiers</p>
                 <p class="text-3xl font-extrabold text-amber-900" id="filesReceived">0</p>
             </div>
             <div class="glass-effect rounded-xl p-6 border border-red-200 bg-red-50">
-                <p class="text-sm text-red-800 mb-2">⏳ En attente</p>
-                <p class="text-3xl font-extrabold text-red-900" id="pendingFiles">0</p>
+                <p class="text-sm text-red-800 mb-2">⏳ Mois en attente</p>
+                <p class="text-3xl font-extrabold text-red-900" id="pendingMonths">0</p>
             </div>
             <div class="glass-effect rounded-xl p-6 border border-green-200 bg-green-50">
                 <p class="text-sm text-green-800 mb-2">✅ Publiés</p>
@@ -53,49 +52,50 @@
             </div>
         </div>
 
-        <!-- CLIENTS GRID -->
         <div class="glass-effect rounded-2xl p-8 border">
             <h2 class="text-2xl font-bold mb-6">📋 Liste des clients</h2>
             <div id="clientsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
     </main>
 
-    <!-- CLIENT DETAILS MODAL -->
+    <!-- MODAL -->
     <div id="clientModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="glass-effect rounded-2xl p-8 max-w-4xl w-full my-8 shadow-2xl border">
+        <div class="glass-effect rounded-2xl p-8 max-w-5xl w-full my-8 border">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h3 class="text-3xl font-bold" id="modalClientName"></h3>
                     <p class="text-slate-600" id="modalClientEmail"></p>
+                    <div id="modalSubscriptionBadge" class="mt-2"></div>
                 </div>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
             </div>
 
-            <!-- FILES SECTION -->
+            <!-- FILES BY MONTH -->
             <div class="mb-8">
-                <h4 class="text-xl font-bold mb-4">📁 Fichiers envoyés</h4>
-                <div id="modalFilesList" class="space-y-3"></div>
+                <h4 class="text-xl font-bold mb-4">📅 Fichiers par mois</h4>
+                <div id="modalFilesByMonth"></div>
             </div>
+        </div>
+    </div>
 
-            <!-- UPLOAD DASHBOARD SECTION -->
+    <!-- MONTH DETAILS MODAL -->
+    <div id="monthModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-2xl p-8 max-w-3xl w-full border">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-2xl font-bold" id="monthModalTitle"></h3>
+                <button onclick="closeMonthModal()" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+            </div>
+            
+            <div id="monthFilesList" class="space-y-3 mb-6"></div>
+
             <div class="border-t pt-6">
-                <h4 class="text-xl font-bold mb-4">📤 Publier un nouveau dashboard</h4>
-                <input type="file" id="dashboardFileInput" accept=".pdf" class="hidden">
-                <div onclick="document.getElementById('dashboardFileInput').click()" 
-                     class="border-3 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-all hover:bg-slate-50">
+                <h4 class="text-lg font-bold mb-4">📤 Publier le dashboard pour ce mois</h4>
+                <input type="file" id="monthDashboardFile" accept=".pdf" class="hidden">
+                <div onclick="document.getElementById('monthDashboardFile').click()" class="border-3 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-all">
                     <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    <p class="font-semibold text-slate-700">Cliquez pour choisir le PDF du dashboard</p>
-                    <p class="text-sm text-slate-500 mt-1">Format accepté : PDF uniquement</p>
+                    <p class="font-semibold text-slate-700">Cliquez pour choisir le PDF</p>
                 </div>
-                <div id="uploadProgress" class="mt-4"></div>
-            </div>
-
-            <!-- SEND EMAIL BUTTON -->
-            <div class="mt-6 flex gap-4">
-                <button onclick="sendEmailNotification()" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    Envoyer un email au client
-                </button>
+                <div id="monthUploadProgress" class="mt-4"></div>
             </div>
         </div>
     </div>
@@ -107,6 +107,7 @@
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentClient = null;
+        let currentMonth = null;
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) window.location.href = 'login.html';
@@ -117,79 +118,110 @@
         async function loadStats() {
             const { count: clients } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'client');
             const { count: files } = await supabase.from('files').select('*', { count: 'exact', head: true });
-            const { count: pending } = await supabase.from('files').select('*', { count: 'exact', head: true }).is('dashboard_id', null);
+            
+            // Compter les mois en attente (mois avec fichiers mais sans dashboard)
+            const { data: filesData } = await supabase.from('files').select('month, dashboard_id');
+            const monthsWithFiles = new Set(filesData?.filter(f => f.month && !f.dashboard_id).map(f => f.month));
+            
             const { count: published } = await supabase.from('dashboards').select('*', { count: 'exact', head: true }).eq('status', 'published');
 
             document.getElementById('totalClients').textContent = clients || 0;
             document.getElementById('filesReceived').textContent = files || 0;
-            document.getElementById('pendingFiles').textContent = pending || 0;
+            document.getElementById('pendingMonths').textContent = monthsWithFiles.size;
             document.getElementById('publishedDashboards').textContent = published || 0;
         }
 
         async function loadClients() {
-            const { data: clients } = await supabase
-                .from('users')
-                .select('*, files(*)')
-                .eq('role', 'client')
-                .order('created_at', { ascending: false });
+            try {
+                const { data: clients, error: clientsError } = await supabase.from('users').select('*').eq('role', 'client').order('created_at', { ascending: false });
+                if (clientsError) throw clientsError;
 
-            const container = document.getElementById('clientsGrid');
-            
-            if (!clients?.length) {
-                container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500">Aucun client</div>';
-                return;
+                const clientsWithData = await Promise.all(clients.map(async (client) => {
+                    const { data: files } = await supabase.from('files').select('*').eq('user_id', client.id);
+                    const { data: subs } = await supabase.from('subscriptions').select('*').eq('user_id', client.id).order('month', { ascending: false }).limit(1);
+                    
+                    const filesByMonth = files?.reduce((acc, f) => {
+                        if (f.month) {
+                            if (!acc[f.month]) acc[f.month] = [];
+                            acc[f.month].push(f);
+                        }
+                        return acc;
+                    }, {}) || {};
+
+                    const monthsWithoutDashboard = Object.keys(filesByMonth).filter(month => 
+                        filesByMonth[month].some(f => !f.dashboard_id)
+                    );
+
+                    return { 
+                        ...client, 
+                        files: files || [],
+                        filesByMonth,
+                        latestSub: subs?.[0],
+                        pendingMonths: monthsWithoutDashboard.length
+                    };
+                }));
+
+                const container = document.getElementById('clientsGrid');
+                if (!clientsWithData?.length) {
+                    container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500">Aucun client</div>';
+                    return;
+                }
+
+                container.innerHTML = clientsWithData.map(client => {
+                    const hasPendingMonths = client.pendingMonths > 0;
+                    let subBadge = '';
+                    
+                    if (client.latestSub?.status === 'free') {
+                        subBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">🆓 Gratuit</span>';
+                    } else if (client.latestSub?.status === 'paid') {
+                        subBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">💳 Payé</span>';
+                    } else {
+                        subBadge = '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">⚠️ Impayé</span>';
+                    }
+
+                    return `
+                        <div onclick='openClientModal(${JSON.stringify(client).replace(/'/g, "&apos;")})' 
+                             class="relative p-6 bg-white rounded-xl border-2 ${hasPendingMonths ? 'border-red-300 bg-red-50' : 'border-slate-200'} 
+                                    cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1">
+                            
+                            ${hasPendingMonths ? `
+                                <div class="absolute -top-2 -right-2 px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold pulse-badge">
+                                    ${client.pendingMonths} mois
+                                </div>
+                            ` : ''}
+
+                            <div class="mb-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <h3 class="text-xl font-bold text-slate-900">${client.laverie_name}</h3>
+                                    ${subBadge}
+                                </div>
+                                <p class="text-sm text-slate-500">${client.email}</p>
+                            </div>
+
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-600">Fichiers envoyés :</span>
+                                    <span class="font-bold">${client.files.length}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-600">Mois en attente :</span>
+                                    <span class="font-bold ${hasPendingMonths ? 'text-red-600' : 'text-green-600'}">
+                                        ${client.pendingMonths}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t">
+                                <button class="w-full py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm">
+                                    Voir les détails →
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Erreur:', error);
             }
-
-            container.innerHTML = clients.map(client => {
-                const pendingFiles = client.files?.filter(f => !f.dashboard_id) || [];
-                const totalFiles = client.files?.length || 0;
-                const hasNewFiles = pendingFiles.length > 0;
-
-                return `
-                    <div onclick='openClientModal(${JSON.stringify(client).replace(/'/g, "&apos;")})' 
-                         class="relative p-6 bg-white rounded-xl border-2 ${hasNewFiles ? 'border-red-300 bg-red-50' : 'border-slate-200'} 
-                                cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1">
-                        
-                        ${hasNewFiles ? `
-                            <div class="absolute -top-2 -right-2 px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold pulse-badge flex items-center gap-1">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                                </span>
-                                ${pendingFiles.length} nouveau${pendingFiles.length > 1 ? 'x' : ''}
-                            </div>
-                        ` : ''}
-
-                        <div class="mb-4">
-                            <h3 class="text-xl font-bold text-slate-900 mb-1">${client.laverie_name}</h3>
-                            <p class="text-sm text-slate-500">${client.email}</p>
-                        </div>
-
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-slate-600">Fichiers envoyés :</span>
-                                <span class="font-bold">${totalFiles}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-600">En attente :</span>
-                                <span class="font-bold ${hasNewFiles ? 'text-red-600' : 'text-green-600'}">
-                                    ${pendingFiles.length}
-                                </span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-600">Dashboards créés :</span>
-                                <span class="font-bold text-green-600">${totalFiles - pendingFiles.length}</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 pt-4 border-t">
-                            <button class="w-full py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm">
-                                Voir les détails →
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
 
         window.openClientModal = function(client) {
@@ -197,53 +229,74 @@
             document.getElementById('modalClientName').textContent = client.laverie_name;
             document.getElementById('modalClientEmail').textContent = client.email;
 
-            const filesList = document.getElementById('modalFilesList');
-            
-            if (!client.files || client.files.length === 0) {
-                filesList.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun fichier envoyé</p>';
+            let subBadge = '';
+            if (client.latestSub?.status === 'free') {
+                subBadge = '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">🆓 Premier mois gratuit</span>';
+            } else if (client.latestSub?.status === 'paid') {
+                subBadge = `<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">💳 Payé - ${formatMonth(client.latestSub.month)}</span>`;
             } else {
-                filesList.innerHTML = client.files.map(file => `
-                    <div class="p-4 bg-slate-50 rounded-lg border-2 ${!file.dashboard_id ? 'border-amber-300 bg-amber-50' : 'border-slate-200'}">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <svg class="w-5 h-5 ${!file.dashboard_id ? 'text-amber-600' : 'text-green-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                    <h4 class="font-bold text-slate-900">${file.original_name}</h4>
-                                    <span class="px-2 py-1 rounded-full text-xs font-bold ${!file.dashboard_id ? 'bg-amber-200 text-amber-900' : 'bg-green-200 text-green-900'}">
-                                        ${!file.dashboard_id ? '⏳ En attente' : '✅ Traité'}
+                subBadge = '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold">⚠️ Abonnement impayé</span>';
+            }
+            document.getElementById('modalSubscriptionBadge').innerHTML = subBadge;
+
+            const filesByMonth = document.getElementById('modalFilesByMonth');
+            
+            if (Object.keys(client.filesByMonth).length === 0) {
+                filesByMonth.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun fichier</p>';
+            } else {
+                filesByMonth.innerHTML = Object.entries(client.filesByMonth)
+                    .sort(([a], [b]) => b.localeCompare(a))
+                    .map(([month, files]) => {
+                        const hasDashboard = files.every(f => f.dashboard_id);
+                        return `
+                            <div onclick='openMonthModal("${month}", ${JSON.stringify(files).replace(/'/g, "&apos;")})' 
+                                 class="p-4 bg-slate-50 rounded-lg border-2 ${hasDashboard ? 'border-green-200 bg-green-50' : 'border-amber-300 bg-amber-50'} cursor-pointer hover:shadow-lg transition-all">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-bold text-lg">📅 ${formatMonth(month)}</p>
+                                        <p class="text-sm text-slate-600">${files.length} fichier${files.length > 1 ? 's' : ''}</p>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold ${hasDashboard ? 'bg-green-200 text-green-900' : 'bg-amber-200 text-amber-900'}">
+                                        ${hasDashboard ? '✅ Dashboard créé' : '⏳ En attente'}
                                     </span>
                                 </div>
-                                <p class="text-sm text-slate-600 mb-2">${file.description || 'Pas de description'}</p>
-                                <p class="text-xs text-slate-400">Envoyé le ${new Date(file.upload_date).toLocaleString('fr-FR')}</p>
                             </div>
-                            <div class="ml-4">
-                                <button onclick='downloadFile("${file.file_path}", "${file.original_name}")' 
-                                        class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm whitespace-nowrap">
-                                    📥 Télécharger
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                        `;
+                    }).join('');
             }
 
             document.getElementById('clientModal').classList.remove('hidden');
         }
 
-        window.closeModal = function() {
-            document.getElementById('clientModal').classList.add('hidden');
-            document.getElementById('dashboardFileInput').value = '';
-            document.getElementById('uploadProgress').innerHTML = '';
-            currentClient = null;
+        window.openMonthModal = function(month, files) {
+            event.stopPropagation();
+            currentMonth = month;
+            document.getElementById('monthModalTitle').textContent = `📅 ${formatMonth(month)}`;
+            
+            const filesList = document.getElementById('monthFilesList');
+            filesList.innerHTML = files.map(file => `
+                <div class="p-4 bg-slate-50 rounded-lg border">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-semibold">${file.original_name}</p>
+                            <p class="text-sm text-slate-600 mt-1">${file.description}</p>
+                            <p class="text-xs text-slate-400 mt-1">${new Date(file.upload_date).toLocaleString('fr-FR')}</p>
+                        </div>
+                        <button onclick='downloadFile("${file.file_path}", "${file.original_name}")' 
+                                class="ml-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-blue-700">
+                            📥 Télécharger
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('monthModal').classList.remove('hidden');
         }
 
         window.downloadFile = async function(path, filename) {
+            event.stopPropagation();
             try {
-                const { data, error } = await supabase.storage.from('client-uploads').download(path);
-                if (error) throw error;
-                
+                const { data } = await supabase.storage.from('client-uploads').download(path);
                 const url = URL.createObjectURL(data);
                 const a = document.createElement('a');
                 a.href = url;
@@ -251,98 +304,70 @@
                 a.click();
                 URL.revokeObjectURL(url);
             } catch (error) {
-                alert('Erreur lors du téléchargement : ' + error.message);
+                alert('Erreur : ' + error.message);
             }
         }
 
-        document.getElementById('dashboardFileInput').addEventListener('change', async (e) => {
+        document.getElementById('monthDashboardFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (!file || !currentClient) return;
+            if (!file || !currentClient || !currentMonth) return;
 
-            const progress = document.getElementById('uploadProgress');
+            const progress = document.getElementById('monthUploadProgress');
             progress.className = 'p-4 bg-blue-100 text-blue-800 rounded-lg';
-            progress.textContent = '📤 Upload en cours...';
+            progress.textContent = '📤 Upload...';
 
             try {
-                const fileName = `${currentClient.id}/${Date.now()}_${file.name}`;
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('dashboards')
-                    .upload(fileName, file);
-
+                const cleanFileName = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\s+/g, '_');
+                const fileName = `${currentClient.id}/${Date.now()}_${cleanFileName}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage.from('dashboards').upload(fileName, file);
                 if (uploadError) throw uploadError;
 
-                const period = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                const { data: dashData, error: dashError } = await supabase
-                    .from('dashboards')
-                    .insert({ 
-                        user_id: currentClient.id,
-                        period: period,
-                        status: 'published',
-                        dashboard_path: uploadData.path,
-                        published_at: new Date().toISOString()
-                    })
-                    .select()
-                    .single();
-
+                const { data: dashData, error: dashError } = await supabase.from('dashboards').insert({ 
+                    user_id: currentClient.id,
+                    period: formatMonth(currentMonth),
+                    status: 'published',
+                    dashboard_path: uploadData.path,
+                    published_at: new Date().toISOString()
+                }).select().single();
                 if (dashError) throw dashError;
 
-                // Update the latest file without dashboard
-                const latestFile = currentClient.files?.find(f => !f.dashboard_id);
-                if (latestFile) {
-                    await supabase.from('files').update({ dashboard_id: dashData.id }).eq('id', latestFile.id);
-                }
+                // Marquer tous les fichiers du mois comme traités
+                await supabase.from('files').update({ dashboard_id: dashData.id }).eq('user_id', currentClient.id).eq('month', currentMonth);
 
                 progress.className = 'p-4 bg-green-100 text-green-800 rounded-lg';
-                progress.textContent = '✅ Dashboard publié avec succès !';
+                progress.textContent = '✅ Dashboard publié !';
 
-                setTimeout(() => {
-                    closeModal();
-                    loadStats();
-                    loadClients();
-                }, 1500);
+                setTimeout(() => { closeMonthModal(); closeModal(); loadStats(); loadClients(); }, 1500);
 
             } catch (error) {
                 progress.className = 'p-4 bg-red-100 text-red-800 rounded-lg';
-                progress.textContent = '❌ Erreur : ' + error.message;
+                progress.textContent = '❌ ' + error.message;
             }
         });
 
-        window.sendEmailNotification = async function() {
-            if (!currentClient) return;
-
-            if (!confirm(`Envoyer un email de notification à ${currentClient.email} ?`)) return;
-
-            try {
-                // TODO: Intégrer avec Resend ou votre service d'email
-                // Pour l'instant, on simule l'envoi
-                
-                alert('✅ Email envoyé avec succès à ' + currentClient.email + ' !\n\n(Pour l\'instant c\'est une simulation. Vous devrez configurer Resend pour les vrais emails)');
-                
-                // Marquer les dashboards comme notifiés
-                await supabase
-                    .from('dashboards')
-                    .update({ notified: true })
-                    .eq('user_id', currentClient.id)
-                    .eq('notified', false);
-
-            } catch (error) {
-                alert('❌ Erreur lors de l\'envoi : ' + error.message);
-            }
+        function formatMonth(monthStr) {
+            const [year, month] = monthStr.split('-');
+            const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            return `${months[parseInt(month) - 1]} ${year}`;
         }
 
-        window.logout = async function() {
-            await supabase.auth.signOut();
-            window.location.href = 'index.html';
+        window.closeModal = function() {
+            document.getElementById('clientModal').classList.add('hidden');
+            currentClient = null;
         }
+
+        window.closeMonthModal = function() {
+            document.getElementById('monthModal').classList.add('hidden');
+            document.getElementById('monthDashboardFile').value = '';
+            document.getElementById('monthUploadProgress').innerHTML = '';
+            currentMonth = null;
+        }
+
+        window.logout = async function() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
 
         loadStats();
         loadClients();
-        
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            loadStats();
-            loadClients();
-        }, 30000);
+        setInterval(() => { loadStats(); loadClients(); }, 30000);
     </script>
 </body>
 </html>

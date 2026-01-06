@@ -1,73 +1,60 @@
 <!DOCTYPE html>
-<html lang="fr" class="scroll-smooth">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Espace - Data Clean</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { primary: '#2563eb', secondary: '#10b981', dark: '#0f172a', surface: '#f8fafc' },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { primary: '#2563eb', secondary: '#10b981' }, fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
     </script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .precision-grid { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 24px 24px; }
         .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .data-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
     </style>
 </head>
-<body class="min-h-screen bg-surface precision-grid">
-    <nav class="sticky top-0 z-50 glass-effect border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-primary rounded-lg">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    </div>
-                    <span class="text-lg font-extrabold text-slate-900">Data <span class="text-primary">Clean</span></span>
+<body class="min-h-screen bg-slate-50 precision-grid">
+    <nav class="sticky top-0 z-50 glass-effect border-b">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="p-2 bg-primary rounded-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span id="userName" class="text-sm font-semibold text-slate-600"></span>
-                    <button onclick="logout()" class="text-sm font-semibold text-red-600 hover:text-red-700">Déconnexion</button>
-                </div>
+                <span class="text-lg font-extrabold">Data <span class="text-primary">Clean</span></span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userName" class="text-sm font-semibold text-slate-600"></span>
+                <button onclick="logout()" class="text-sm font-semibold text-red-600">Déconnexion</button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- UPLOAD -->
-        <div class="glass-effect rounded-2xl p-8 mb-8 shadow-xl border border-slate-200">
-            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
-                <div class="p-2 bg-primary/10 rounded-lg">
-                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900">📤 Importer un nouveau fichier</h2>
+    <main class="max-w-7xl mx-auto px-4 py-12">
+        <!-- SUBSCRIPTION STATUS -->
+        <div id="subscriptionStatus" class="glass-effect rounded-2xl p-6 mb-8 border"></div>
+
+        <!-- UPLOAD SECTION -->
+        <div id="uploadSection" class="glass-effect rounded-2xl p-8 mb-8 border">
+            <h2 class="text-2xl font-bold mb-6">📤 Importer un nouveau fichier</h2>
+            
+            <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                <p class="text-sm text-amber-800">⚠️ N'uploadez que les fichiers Excel contenant vos données importantes de caisse ou de transactions.</p>
             </div>
 
-            <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
-                <div class="flex items-start gap-3">
-                    <svg class="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    <div>
-                        <p class="font-semibold text-amber-900">⚠️ Attention</p>
-                        <p class="text-sm text-amber-800 mt-1">N'uploadez que les fichiers Excel contenant vos données importantes de caisse ou de transactions.</p>
-                    </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Mois concerné <span class="text-red-500">*</span></label>
+                    <select id="monthSelect" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none"></select>
                 </div>
             </div>
 
             <div class="mb-6">
-                <label class="block text-sm font-bold text-slate-700 mb-2">
-                    Description du fichier <span class="text-red-500">*</span>
-                </label>
-                <textarea id="fileDescription" rows="3" placeholder="Ex: Données de caisse du mois de janvier 2026" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none resize-none" required></textarea>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Description <span class="text-red-500">*</span></label>
+                <textarea id="fileDescription" rows="3" placeholder="Ex: Données de caisse complètes" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none resize-none"></textarea>
             </div>
             
             <div id="dropZone" class="border-3 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary transition-all">
@@ -79,15 +66,15 @@
             <div id="uploadStatus" class="mt-4 hidden"></div>
         </div>
 
-        <!-- FILES LIST -->
-        <div class="glass-effect rounded-2xl p-8 mb-8 shadow-xl border border-slate-200">
-            <h2 class="text-2xl font-bold text-slate-900 mb-6">📁 Mes fichiers uploadés</h2>
-            <div id="filesList"></div>
+        <!-- FILES BY MONTH -->
+        <div class="glass-effect rounded-2xl p-8 mb-8 border">
+            <h2 class="text-2xl font-bold mb-6">📁 Mes fichiers par mois</h2>
+            <div id="filesByMonth"></div>
         </div>
 
         <!-- DASHBOARDS -->
-        <div class="glass-effect rounded-2xl p-8 shadow-xl border border-slate-200">
-            <h2 class="text-2xl font-bold text-slate-900 mb-6">📊 Mes tableaux de bord</h2>
+        <div class="glass-effect rounded-2xl p-8 border">
+            <h2 class="text-2xl font-bold mb-6">📊 Mes tableaux de bord</h2>
             <div id="dashboardsList"></div>
         </div>
     </main>
@@ -95,14 +82,127 @@
     <script type="module">
         const SUPABASE_URL = 'https://xkrjtaqphzuwjwnsibzf.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrcmp0YXFwaHp1d2p3bnNpYnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTYwOTgsImV4cCI6MjA4MzE5MjA5OH0.n7crc4kNbMrR4kHp-66XVlhufS4-2qp329cqvTt8hR8';
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51SFc02RddQAvEuauFuRSqt3PsxPm9qsQI12lIQa1CQYb1B6MvhcfbMUmtJqEsgEvepHQHsPUFljnAGcGW2Ln2wDv00XEtLATkM';
+        
         const { createClient } = window.supabase;
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) window.location.href = 'login.html';
 
         const { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single();
         document.getElementById('userName').textContent = userData?.laverie_name || 'Client';
+
+        // Generate months dropdown
+        const monthSelect = document.getElementById('monthSelect');
+        const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+
+        for (let i = -1; i <= 2; i++) {
+            const date = new Date(currentYear, currentMonth + i, 1);
+            const monthNum = date.getMonth();
+            const year = date.getFullYear();
+            const value = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
+            const label = `${months[monthNum]} ${year}`;
+            const option = new Option(label, value, i === 0, i === 0);
+            monthSelect.add(option);
+        }
+
+        async function checkSubscriptionStatus() {
+            const selectedMonth = monthSelect.value;
+            const { data: sub } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('month', selectedMonth).single();
+            
+            const statusDiv = document.getElementById('subscriptionStatus');
+            const uploadSection = document.getElementById('uploadSection');
+
+            if (!sub) {
+                // Pas d'abonnement pour ce mois
+                statusDiv.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-lg font-bold text-red-900">⚠️ Abonnement requis</p>
+                            <p class="text-sm text-red-700">Votre premier mois gratuit est terminé. Veuillez souscrire pour continuer.</p>
+                        </div>
+                        <button onclick="paySubscription()" class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                            Payer 99€
+                        </button>
+                    </div>
+                `;
+                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-red-300 bg-red-50';
+                uploadSection.style.display = 'none';
+                return false;
+            }
+
+            if (sub.status === 'free') {
+                statusDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-green-900">🎉 Premier mois gratuit !</p>
+                            <p class="text-sm text-green-700">Profitez de votre essai gratuit pour découvrir nos services.</p>
+                        </div>
+                    </div>
+                `;
+                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-green-300 bg-green-50';
+                uploadSection.style.display = 'block';
+                return true;
+            }
+
+            if (sub.status === 'paid') {
+                statusDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-blue-900">✅ Abonnement actif</p>
+                            <p class="text-sm text-blue-700">Payé le ${new Date(sub.paid_at).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                    </div>
+                `;
+                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-blue-300 bg-blue-50';
+                uploadSection.style.display = 'block';
+                return true;
+            }
+
+            return false;
+        }
+
+        window.paySubscription = async function() {
+            if (!confirm('Payer 99€ pour le mois en cours ?')) return;
+            
+            try {
+                // TODO: Intégrer Stripe Checkout
+                // Pour l'instant, simulation
+                const selectedMonth = monthSelect.value;
+                
+                alert('Redirection vers Stripe...\n\n(À configurer avec votre compte Stripe)');
+                
+                // Simuler le paiement
+                const { error } = await supabase.from('subscriptions').insert({
+                    user_id: user.id,
+                    month: selectedMonth,
+                    status: 'paid',
+                    payment_method: 'stripe',
+                    paid_at: new Date().toISOString(),
+                    amount: 99.00
+                });
+
+                if (error) throw error;
+                
+                alert('✅ Paiement effectué !');
+                checkSubscriptionStatus();
+                
+            } catch (error) {
+                alert('Erreur : ' + error.message);
+            }
+        }
 
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
@@ -113,7 +213,12 @@
         fileInput.addEventListener('change', async (e) => { if (e.target.files[0]) await uploadFile(e.target.files[0]); });
 
         async function uploadFile(file) {
+            const canUpload = await checkSubscriptionStatus();
+            if (!canUpload) return;
+
             const description = document.getElementById('fileDescription').value.trim();
+            const selectedMonth = monthSelect.value;
+            
             if (!description) { alert('❌ Ajoutez une description !'); return; }
 
             const statusDiv = document.getElementById('uploadStatus');
@@ -122,45 +227,103 @@
             statusDiv.classList.remove('hidden');
 
             try {
-                const fileName = `${user.id}/${Date.now()}_${file.name}`;
+                const cleanFileName = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\s+/g, '_');
+                const fileName = `${user.id}/${Date.now()}_${cleanFileName}`;
                 const { data: uploadData, error: uploadError } = await supabase.storage.from('client-uploads').upload(fileName, file);
                 if (uploadError) throw uploadError;
 
-                const { error: dbError } = await supabase.from('files').insert({ user_id: user.id, filename: fileName, original_name: file.name, file_path: uploadData.path, description: description });
+                const { error: dbError } = await supabase.from('files').insert({ 
+                    user_id: user.id, 
+                    filename: fileName, 
+                    original_name: file.name, 
+                    file_path: uploadData.path, 
+                    description: description,
+                    month: selectedMonth
+                });
                 if (dbError) throw dbError;
 
                 statusDiv.className = 'mt-4 p-4 bg-green-100 text-green-800 rounded-lg';
                 statusDiv.textContent = '✅ Fichier envoyé !';
                 document.getElementById('fileDescription').value = '';
                 fileInput.value = '';
-                setTimeout(() => { statusDiv.classList.add('hidden'); loadFiles(); }, 2000);
+                setTimeout(() => { statusDiv.classList.add('hidden'); loadFilesByMonth(); }, 2000);
             } catch (error) {
                 statusDiv.className = 'mt-4 p-4 bg-red-100 text-red-800 rounded-lg';
                 statusDiv.textContent = '❌ ' + error.message;
             }
         }
 
-        async function loadFiles() {
+        async function loadFilesByMonth() {
             const { data: files } = await supabase.from('files').select('*').eq('user_id', user.id).order('upload_date', { ascending: false });
-            const container = document.getElementById('filesList');
-            if (!files?.length) { container.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun fichier</p>'; return; }
-            container.innerHTML = files.map(f => `
-                <div class="p-4 bg-white rounded-lg border mb-3">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="font-bold">${f.original_name}</h3>
-                            <p class="text-sm text-slate-600">${f.description}</p>
-                            <p class="text-xs text-slate-400 mt-1">${new Date(f.upload_date).toLocaleString('fr-FR')}</p>
-                        </div>
+            const container = document.getElementById('filesByMonth');
+            
+            if (!files?.length) {
+                container.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun fichier</p>';
+                return;
+            }
+
+            const filesByMonth = files.reduce((acc, file) => {
+                const month = file.month || 'Sans date';
+                if (!acc[month]) acc[month] = [];
+                acc[month].push(file);
+                return acc;
+            }, {});
+
+            container.innerHTML = Object.entries(filesByMonth).map(([month, monthFiles]) => `
+                <div class="mb-4 border rounded-lg overflow-hidden">
+                    <div class="bg-slate-100 p-4 font-bold flex justify-between items-center cursor-pointer" onclick="toggleMonth('${month}')">
+                        <span>📅 ${formatMonth(month)} (${monthFiles.length} fichier${monthFiles.length > 1 ? 's' : ''})</span>
+                        <svg class="w-5 h-5 transition-transform" id="arrow-${month}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div id="files-${month}" class="hidden p-4 space-y-2 bg-white">
+                        ${monthFiles.map(file => `
+                            <div class="p-3 bg-slate-50 rounded-lg border flex justify-between items-start">
+                                <div class="flex-1">
+                                    <p class="font-semibold text-sm">${file.original_name}</p>
+                                    <p class="text-xs text-slate-600 mt-1">${file.description}</p>
+                                    <p class="text-xs text-slate-400 mt-1">${new Date(file.upload_date).toLocaleString('fr-FR')}</p>
+                                </div>
+                                <button onclick='deleteFile("${file.id}", "${file.file_path}")' class="ml-4 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold hover:bg-red-200">🗑️ Supprimer</button>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `).join('');
         }
 
+        window.toggleMonth = function(month) {
+            const content = document.getElementById(`files-${month}`);
+            const arrow = document.getElementById(`arrow-${month}`);
+            content.classList.toggle('hidden');
+            arrow.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        }
+
+        function formatMonth(monthStr) {
+            if (monthStr === 'Sans date') return monthStr;
+            const [year, month] = monthStr.split('-');
+            const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            return `${months[parseInt(month) - 1]} ${year}`;
+        }
+
+        window.deleteFile = async function(fileId, filePath) {
+            if (!confirm('Supprimer ce fichier ?')) return;
+            try {
+                await supabase.storage.from('client-uploads').remove([filePath]);
+                await supabase.from('files').delete().eq('id', fileId);
+                alert('✅ Fichier supprimé');
+                loadFilesByMonth();
+            } catch (error) {
+                alert('❌ Erreur : ' + error.message);
+            }
+        }
+
         async function loadDashboards() {
             const { data: dashboards } = await supabase.from('dashboards').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
             const container = document.getElementById('dashboardsList');
-            if (!dashboards?.length) { container.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun dashboard</p>'; return; }
+            if (!dashboards?.length) {
+                container.innerHTML = '<p class="text-center text-slate-500 py-8">Aucun dashboard</p>';
+                return;
+            }
             container.innerHTML = dashboards.map(d => `
                 <div class="p-6 bg-white rounded-xl border-2 ${d.status === 'published' ? 'border-green-200' : 'border-slate-200'} mb-4">
                     <div class="flex justify-between items-center">
@@ -184,7 +347,9 @@
 
         window.logout = async function() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
 
-        loadFiles();
+        monthSelect.addEventListener('change', checkSubscriptionStatus);
+        checkSubscriptionStatus();
+        loadFilesByMonth();
         loadDashboards();
     </script>
 </body>
