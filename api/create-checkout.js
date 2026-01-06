@@ -1,6 +1,3 @@
-// api/create-checkout.js
-// Fonction Vercel pour créer une session Stripe Checkout
-
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 module.exports = async (req, res) => {
@@ -15,6 +12,14 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // DEBUG: Vérifier si la clé existe
+  console.log('STRIPE_SECRET_KEY existe ?', !!process.env.STRIPE_SECRET_KEY);
+  console.log('STRIPE_SECRET_KEY commence par sk_test ?', process.env.STRIPE_SECRET_KEY?.startsWith('sk_test'));
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return res.status(500).json({ error: 'STRIPE_SECRET_KEY not configured' });
   }
 
   try {
@@ -34,9 +39,8 @@ module.exports = async (req, res) => {
             product_data: {
               name: `Dashboard Data Clean - ${monthLabel}`,
               description: `Accès au dashboard pour ${monthLabel}`,
-              images: ['https://your-logo-url.com/logo.png'], // Optionnel
             },
-            unit_amount: 9900, // 99.00 EUR en centimes
+            unit_amount: 9900,
           },
           quantity: 1,
         },
