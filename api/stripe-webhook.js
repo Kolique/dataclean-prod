@@ -18,23 +18,28 @@ module.exports = async (req, res) => {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    // Vercel passe le body en Buffer, on doit le convertir
+    const rawBody = req.body;
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
+    console.error('❌ Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  console.log('✅ Webhook event received:', event.type);
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const { userId, month, monthLabel } = session.metadata;
     const amount = session.amount_total / 100;
 
-    console.log(`✅ Payment received: ${amount}€ for ${monthLabel} (User: ${userId})`);
+    console.log(`💰 Payment received: ${amount}€ for ${monthLabel} (User: ${userId})`);
 
     try {
+      // Créer ou mettre à jour l'abonnement
       const { data, error } = await supabase
         .from('subscriptions')
-        .insert({
+        .upsert({
           user_id: userId,
           month: month,
           status: 'available',
@@ -43,17 +48,19 @@ module.exports = async (req, res) => {
           amount: amount,
           stripe_payment_id: session.payment_intent,
           is_first_free: false
+        }, {
+          onConflict: 'user_id,month'
         });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('❌ Supabase error:', error);
         throw error;
       }
 
-      console.log(`✅ Subscription created in Supabase for ${monthLabel}`);
+      console.log(`✅ Subscription created/updated in Supabase for ${monthLabel}`);
 
     } catch (error) {
-      console.error('Error creating subscription:', error);
+      console.error('❌ Error creating subscription:', error);
       return res.status(500).json({ error: 'Failed to create subscription' });
     }
   }
