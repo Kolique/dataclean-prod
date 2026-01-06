@@ -42,14 +42,12 @@
             <h2 class="text-2xl font-bold mb-6">📤 Importer un nouveau fichier</h2>
             
             <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
-                <p class="text-sm text-amber-800">⚠️ N'uploadez que les fichiers Excel contenant vos données importantes de caisse ou de transactions.</p>
+                <p class="text-sm text-amber-800">⚠️ N'uploadez que les fichiers Excel contenant vos données importantes.</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Mois concerné <span class="text-red-500">*</span></label>
-                    <select id="monthSelect" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none"></select>
-                </div>
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Pour quel mois ? <span class="text-red-500">*</span></label>
+                <select id="monthSelect" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none"></select>
             </div>
 
             <div class="mb-6">
@@ -94,15 +92,13 @@
         const { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single();
         document.getElementById('userName').textContent = userData?.laverie_name || 'Client';
 
-        // Generate months dropdown
+        // Generate months
         const monthSelect = document.getElementById('monthSelect');
         const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
         const currentDate = new Date();
-        const currentMonth = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
-
-        for (let i = -1; i <= 2; i++) {
-            const date = new Date(currentYear, currentMonth + i, 1);
+        
+        for (let i = -1; i <= 3; i++) {
+            const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
             const monthNum = date.getMonth();
             const year = date.getFullYear();
             const value = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
@@ -111,22 +107,63 @@
             monthSelect.add(option);
         }
 
-        async function checkSubscriptionStatus() {
+        async function checkUploadStatus() {
             const selectedMonth = monthSelect.value;
-            const { data: sub } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('month', selectedMonth).single();
             
+            // Vérifier si premier dashboard gratuit déjà utilisé
+            const { data: completedSubs } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('status', 'completed')
+                .eq('is_first_free', true);
+
+            const hasReceivedFirstDashboard = completedSubs && completedSubs.length > 0;
+
             const statusDiv = document.getElementById('subscriptionStatus');
             const uploadSection = document.getElementById('uploadSection');
 
-            if (!sub) {
-                // Pas d'abonnement pour ce mois
+            // CAS 1 : Premier dashboard gratuit pas encore utilisé
+            if (!hasReceivedFirstDashboard) {
+                statusDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-green-900 text-lg">🎉 Premier dashboard GRATUIT !</p>
+                            <p class="text-sm text-green-700">Uploadez vos fichiers pour n'importe quel mois. Votre premier dashboard est offert.</p>
+                        </div>
+                    </div>
+                `;
+                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-green-300 bg-green-50';
+                uploadSection.style.display = 'block';
+                return true;
+            }
+
+            // CAS 2 : Vérifier si le mois sélectionné est payé
+            const { data: monthSub } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('month', selectedMonth)
+                .single();
+
+            // Pas d'abonnement pour ce mois = DOIT PAYER
+            if (!monthSub || monthSub.status === 'completed') {
+                const monthLabel = formatMonth(selectedMonth);
                 statusDiv.innerHTML = `
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-lg font-bold text-red-900">⚠️ Abonnement requis</p>
-                            <p class="text-sm text-red-700">Votre premier mois gratuit est terminé. Veuillez souscrire pour continuer.</p>
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-red-100 rounded-lg">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold text-red-900">⚠️ Paiement requis pour ${monthLabel}</p>
+                                <p class="text-sm text-red-700">Votre premier dashboard gratuit a été utilisé. Payez 99€ pour continuer.</p>
+                            </div>
                         </div>
-                        <button onclick="paySubscription()" class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 flex items-center gap-2">
+                        <button onclick="payForMonth('${selectedMonth}')" class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 whitespace-nowrap flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                             Payer 99€
                         </button>
@@ -137,32 +174,16 @@
                 return false;
             }
 
-            if (sub.status === 'free') {
-                statusDiv.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="p-3 bg-green-100 rounded-lg">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="font-bold text-green-900">🎉 Premier mois gratuit !</p>
-                            <p class="text-sm text-green-700">Profitez de votre essai gratuit pour découvrir nos services.</p>
-                        </div>
-                    </div>
-                `;
-                statusDiv.className = 'glass-effect rounded-2xl p-6 mb-8 border-2 border-green-300 bg-green-50';
-                uploadSection.style.display = 'block';
-                return true;
-            }
-
-            if (sub.status === 'paid') {
+            // CAS 3 : Mois payé et disponible
+            if (monthSub.status === 'available') {
                 statusDiv.innerHTML = `
                     <div class="flex items-center gap-3">
                         <div class="p-3 bg-blue-100 rounded-lg">
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                         <div>
-                            <p class="font-bold text-blue-900">✅ Abonnement actif</p>
-                            <p class="text-sm text-blue-700">Payé le ${new Date(sub.paid_at).toLocaleDateString('fr-FR')}</p>
+                            <p class="font-bold text-blue-900">✅ ${formatMonth(selectedMonth)} - Payé</p>
+                            <p class="text-sm text-blue-700">Vous pouvez uploader vos fichiers pour ce mois.</p>
                         </div>
                     </div>
                 `;
@@ -174,30 +195,28 @@
             return false;
         }
 
-        window.paySubscription = async function() {
-            if (!confirm('Payer 99€ pour le mois en cours ?')) return;
+        window.payForMonth = async function(month) {
+            if (!confirm(`Payer 99€ pour ${formatMonth(month)} ?`)) return;
             
             try {
                 // TODO: Intégrer Stripe Checkout
-                // Pour l'instant, simulation
-                const selectedMonth = monthSelect.value;
-                
                 alert('Redirection vers Stripe...\n\n(À configurer avec votre compte Stripe)');
                 
                 // Simuler le paiement
                 const { error } = await supabase.from('subscriptions').insert({
                     user_id: user.id,
-                    month: selectedMonth,
-                    status: 'paid',
+                    month: month,
+                    status: 'available',
                     payment_method: 'stripe',
                     paid_at: new Date().toISOString(),
-                    amount: 99.00
+                    amount: 99.00,
+                    is_first_free: false
                 });
 
                 if (error) throw error;
                 
                 alert('✅ Paiement effectué !');
-                checkSubscriptionStatus();
+                checkUploadStatus();
                 
             } catch (error) {
                 alert('Erreur : ' + error.message);
@@ -213,7 +232,7 @@
         fileInput.addEventListener('change', async (e) => { if (e.target.files[0]) await uploadFile(e.target.files[0]); });
 
         async function uploadFile(file) {
-            const canUpload = await checkSubscriptionStatus();
+            const canUpload = await checkUploadStatus();
             if (!canUpload) return;
 
             const description = document.getElementById('fileDescription').value.trim();
@@ -283,7 +302,7 @@
                                     <p class="text-xs text-slate-600 mt-1">${file.description}</p>
                                     <p class="text-xs text-slate-400 mt-1">${new Date(file.upload_date).toLocaleString('fr-FR')}</p>
                                 </div>
-                                <button onclick='deleteFile("${file.id}", "${file.file_path}")' class="ml-4 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold hover:bg-red-200">🗑️ Supprimer</button>
+                                <button onclick='deleteFile("${file.id}", "${file.file_path}")' class="ml-4 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold hover:bg-red-200">🗑️</button>
                             </div>
                         `).join('')}
                     </div>
@@ -347,8 +366,8 @@
 
         window.logout = async function() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
 
-        monthSelect.addEventListener('change', checkSubscriptionStatus);
-        checkSubscriptionStatus();
+        monthSelect.addEventListener('change', checkUploadStatus);
+        checkUploadStatus();
         loadFilesByMonth();
         loadDashboards();
     </script>
