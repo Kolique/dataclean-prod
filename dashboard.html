@@ -37,30 +37,130 @@
         <!-- SUBSCRIPTION STATUS -->
         <div id="subscriptionStatus" class="glass-effect rounded-2xl p-6 mb-8 border"></div>
 
-        <!-- UPLOAD SECTION -->
+        <!-- DATA INPUT SECTION -->
         <div id="uploadSection" class="glass-effect rounded-2xl p-8 mb-8 border">
-            <h2 class="text-2xl font-bold mb-6">📤 Importer un nouveau fichier</h2>
-            
-            <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
-                <p class="text-sm text-amber-800">⚠️ N'uploadez que les fichiers Excel importants.</p>
-            </div>
+            <h2 class="text-2xl font-bold mb-6">📊 Saisir mes données du mois</h2>
 
             <div class="mb-6">
                 <label class="block text-sm font-bold text-slate-700 mb-2">Pour quel mois ? <span class="text-red-500">*</span></label>
                 <select id="monthSelect" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none"></select>
             </div>
 
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-slate-700 mb-2">Description <span class="text-red-500">*</span></label>
-                <textarea id="fileDescription" rows="3" placeholder="Ex: Données de caisse complètes" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none resize-none"></textarea>
+            <!-- TABS -->
+            <div class="flex border-b border-slate-200 mb-6">
+                <button id="tabForm" onclick="switchTab('form')" class="px-6 py-3 font-semibold text-primary border-b-2 border-primary">
+                    ✏️ Formulaire simple
+                </button>
+                <button id="tabExcel" onclick="switchTab('excel')" class="px-6 py-3 font-semibold text-slate-500 hover:text-slate-700">
+                    📁 Upload Excel
+                </button>
             </div>
-            
-            <div id="dropZone" class="border-3 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary transition-all">
-                <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                <p class="text-lg font-semibold text-slate-700 mb-2">Glissez-déposez votre fichier ici</p>
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
-                <button onclick="document.getElementById('fileInput').click()" class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700">Choisir un fichier</button>
+
+            <!-- TAB: FORMULAIRE -->
+            <div id="formSection">
+                <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+                    <p class="text-sm text-blue-800">💡 Pas de fichier Excel ? Remplissez ce formulaire simple et nous créerons votre dashboard !</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <!-- CA Mensuel -->
+                    <div class="p-4 bg-slate-50 rounded-xl border">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">💰 Chiffre d'affaires du mois (€) <span class="text-red-500">*</span></label>
+                        <input type="number" id="formCA" min="0" step="0.01" placeholder="Ex: 4500"
+                            class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none text-xl font-bold">
+                    </div>
+
+                    <!-- Nombre de clients -->
+                    <div class="p-4 bg-slate-50 rounded-xl border">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">👥 Nombre de clients/transactions</label>
+                        <input type="number" id="formClients" min="0" placeholder="Ex: 320"
+                            class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none text-xl font-bold">
+                    </div>
+                </div>
+
+                <!-- Top Produits -->
+                <div class="mb-6 p-4 bg-slate-50 rounded-xl border">
+                    <label class="block text-sm font-bold text-slate-700 mb-4">🏆 Top 5 produits/services (optionnel)</label>
+                    <div id="topProducts" class="space-y-3">
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <span class="col-span-1 text-center font-bold text-primary">1</span>
+                            <input type="text" placeholder="Nom du produit" class="col-span-7 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-name">
+                            <input type="number" placeholder="CA (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-ca">
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <span class="col-span-1 text-center font-bold text-primary">2</span>
+                            <input type="text" placeholder="Nom du produit" class="col-span-7 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-name">
+                            <input type="number" placeholder="CA (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-ca">
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <span class="col-span-1 text-center font-bold text-primary">3</span>
+                            <input type="text" placeholder="Nom du produit" class="col-span-7 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-name">
+                            <input type="number" placeholder="CA (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-ca">
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <span class="col-span-1 text-center font-bold text-slate-400">4</span>
+                            <input type="text" placeholder="Nom du produit" class="col-span-7 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-name">
+                            <input type="number" placeholder="CA (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-ca">
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <span class="col-span-1 text-center font-bold text-slate-400">5</span>
+                            <input type="text" placeholder="Nom du produit" class="col-span-7 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-name">
+                            <input type="number" placeholder="CA (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none product-ca">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charges -->
+                <div class="mb-6 p-4 bg-slate-50 rounded-xl border">
+                    <label class="block text-sm font-bold text-slate-700 mb-4">📉 Charges principales (optionnel)</label>
+                    <div id="charges" class="space-y-3">
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <input type="text" placeholder="Type de charge (ex: Loyer)" class="col-span-8 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none charge-name">
+                            <input type="number" placeholder="Montant (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none charge-amount">
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <input type="text" placeholder="Type de charge (ex: Électricité)" class="col-span-8 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none charge-name">
+                            <input type="number" placeholder="Montant (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none charge-amount">
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <input type="text" placeholder="Type de charge (ex: Salaires)" class="col-span-8 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none charge-name">
+                            <input type="number" placeholder="Montant (€)" min="0" class="col-span-4 px-3 py-2 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none charge-amount">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">📝 Notes ou commentaires (optionnel)</label>
+                    <textarea id="formNotes" rows="3" placeholder="Ex: Promotion exceptionnelle ce mois, travaux en cours..."
+                        class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none resize-none"></textarea>
+                </div>
+
+                <button onclick="submitFormData()" class="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Envoyer mes données
+                </button>
             </div>
+
+            <!-- TAB: EXCEL UPLOAD -->
+            <div id="excelSection" class="hidden">
+                <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                    <p class="text-sm text-amber-800">📁 Vous avez déjà un fichier Excel structuré ? Uploadez-le ici.</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Description <span class="text-red-500">*</span></label>
+                    <textarea id="fileDescription" rows="3" placeholder="Ex: Données de caisse complètes" class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none resize-none"></textarea>
+                </div>
+
+                <div id="dropZone" class="border-3 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary transition-all">
+                    <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p class="text-lg font-semibold text-slate-700 mb-2">Glissez-déposez votre fichier ici</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700">Choisir un fichier</button>
+                </div>
+            </div>
+
             <div id="uploadStatus" class="mt-4 hidden"></div>
         </div>
 
@@ -390,6 +490,128 @@
         }
 
         window.logout = async function() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
+
+        // Tab switching
+        window.switchTab = function(tab) {
+            const formSection = document.getElementById('formSection');
+            const excelSection = document.getElementById('excelSection');
+            const tabForm = document.getElementById('tabForm');
+            const tabExcel = document.getElementById('tabExcel');
+
+            if (tab === 'form') {
+                formSection.classList.remove('hidden');
+                excelSection.classList.add('hidden');
+                tabForm.className = 'px-6 py-3 font-semibold text-primary border-b-2 border-primary';
+                tabExcel.className = 'px-6 py-3 font-semibold text-slate-500 hover:text-slate-700';
+            } else {
+                formSection.classList.add('hidden');
+                excelSection.classList.remove('hidden');
+                tabForm.className = 'px-6 py-3 font-semibold text-slate-500 hover:text-slate-700';
+                tabExcel.className = 'px-6 py-3 font-semibold text-primary border-b-2 border-primary';
+            }
+        }
+
+        // Form data submission
+        window.submitFormData = async function() {
+            const canUpload = await checkUploadStatus();
+            if (!canUpload) {
+                alert('❌ Vous devez payer pour soumettre des données pour ce mois !');
+                return;
+            }
+
+            const ca = document.getElementById('formCA').value;
+            const clients = document.getElementById('formClients').value;
+            const notes = document.getElementById('formNotes').value;
+            const selectedMonth = monthSelect.value;
+
+            if (!ca) {
+                alert('❌ Veuillez entrer votre chiffre d\'affaires !');
+                return;
+            }
+
+            // Collect top products
+            const productNames = document.querySelectorAll('.product-name');
+            const productCAs = document.querySelectorAll('.product-ca');
+            const topProducts = [];
+            productNames.forEach((input, i) => {
+                if (input.value.trim()) {
+                    topProducts.push({
+                        name: input.value.trim(),
+                        ca: parseFloat(productCAs[i].value) || 0
+                    });
+                }
+            });
+
+            // Collect charges
+            const chargeNames = document.querySelectorAll('.charge-name');
+            const chargeAmounts = document.querySelectorAll('.charge-amount');
+            const charges = [];
+            chargeNames.forEach((input, i) => {
+                if (input.value.trim()) {
+                    charges.push({
+                        name: input.value.trim(),
+                        amount: parseFloat(chargeAmounts[i].value) || 0
+                    });
+                }
+            });
+
+            const formData = {
+                type: 'form_data',
+                month: selectedMonth,
+                submitted_at: new Date().toISOString(),
+                data: {
+                    ca_mensuel: parseFloat(ca),
+                    nombre_clients: parseInt(clients) || null,
+                    top_produits: topProducts,
+                    charges: charges,
+                    notes: notes || null
+                }
+            };
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.className = 'mt-4 p-4 bg-blue-100 text-blue-800 rounded-lg';
+            statusDiv.textContent = '📤 Envoi des données...';
+            statusDiv.classList.remove('hidden');
+
+            try {
+                // Create a JSON file and upload it
+                const jsonBlob = new Blob([JSON.stringify(formData, null, 2)], { type: 'application/json' });
+                const fileName = `${user.id}/${Date.now()}_donnees_${selectedMonth}.json`;
+
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('client-uploads')
+                    .upload(fileName, jsonBlob);
+
+                if (uploadError) throw uploadError;
+
+                // Save to files table
+                const { error: dbError } = await supabase.from('files').insert({
+                    user_id: user.id,
+                    filename: fileName,
+                    original_name: `Données formulaire - ${formatMonth(selectedMonth)}.json`,
+                    file_path: uploadData.path,
+                    description: `CA: ${parseFloat(ca).toLocaleString('fr-FR')}€ | ${topProducts.length} produits | ${charges.length} charges`,
+                    month: selectedMonth
+                });
+
+                if (dbError) throw dbError;
+
+                statusDiv.className = 'mt-4 p-4 bg-green-100 text-green-800 rounded-lg';
+                statusDiv.textContent = '✅ Données envoyées avec succès !';
+
+                // Reset form
+                document.getElementById('formCA').value = '';
+                document.getElementById('formClients').value = '';
+                document.getElementById('formNotes').value = '';
+                document.querySelectorAll('.product-name, .product-ca, .charge-name, .charge-amount').forEach(input => input.value = '');
+
+                setTimeout(() => { statusDiv.classList.add('hidden'); loadFilesByMonth(); }, 2000);
+
+            } catch (error) {
+                statusDiv.className = 'mt-4 p-4 bg-red-100 text-red-800 rounded-lg';
+                statusDiv.textContent = '❌ Erreur : ' + error.message;
+            }
+        }
 
         monthSelect.addEventListener('change', checkUploadStatus);
         checkUploadStatus();

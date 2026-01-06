@@ -101,6 +101,7 @@
     <script type="module">
         const SUPABASE_URL = 'https://xkrjtaqphzuwjwnsibzf.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrcmp0YXFwaHp1d2p3bnNpYnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTYwOTgsImV4cCI6MjA4MzE5MjA5OH0.n7crc4kNbMrR4kHp-66XVlhufS4-2qp329cqvTt8hR8';
+        const BACKEND_URL = 'https://dataclean-prod.vercel.app';
         const { createClient } = window.supabase;
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -340,8 +341,37 @@
                 // Attendre 2 secondes pour le trigger
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                progress.className = 'p-4 bg-green-100 text-green-800 rounded-lg';
-                progress.textContent = '✅ Dashboard publié ! Le trigger a marqué le mois comme completed.';
+                // Envoyer notification email
+                progress.textContent = '📧 Envoi de la notification email...';
+
+                try {
+                    const emailResponse = await fetch(`${BACKEND_URL}/api/send-notification`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'dashboard_ready',
+                            to: currentClient.email,
+                            clientName: currentClient.laverie_name,
+                            period: formatMonth(currentMonth)
+                        })
+                    });
+
+                    const emailResult = await emailResponse.json();
+
+                    if (emailResult.success) {
+                        progress.className = 'p-4 bg-green-100 text-green-800 rounded-lg';
+                        progress.textContent = emailResult.simulated
+                            ? '✅ Dashboard publié ! (Email simulé - configurer RESEND_API_KEY)'
+                            : '✅ Dashboard publié et notification envoyée !';
+                    } else {
+                        progress.className = 'p-4 bg-amber-100 text-amber-800 rounded-lg';
+                        progress.textContent = '✅ Dashboard publié ! (Email non envoyé)';
+                    }
+                } catch (emailError) {
+                    console.error('Email error:', emailError);
+                    progress.className = 'p-4 bg-amber-100 text-amber-800 rounded-lg';
+                    progress.textContent = '✅ Dashboard publié ! (Erreur email)';
+                }
 
                 setTimeout(() => { closeMonthModal(); closeModal(); loadStats(); loadClients(); }, 2000);
 

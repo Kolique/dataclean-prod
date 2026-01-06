@@ -42,10 +42,10 @@
             
             <form id="signupForm" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Nom de votre laverie</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Nom de votre commerce</label>
                     <input type="text" id="laverieName" required
                         class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary focus:outline-none transition-colors"
-                        placeholder="Ex: Laverie Express">
+                        placeholder="Ex: Boulangerie Martin, Café du Coin...">
                 </div>
                 
                 <div>
@@ -137,6 +137,21 @@
                     });
 
                 if (profileError) throw profileError;
+
+                // Envoyer email de bienvenue
+                try {
+                    await fetch('https://dataclean-prod.vercel.app/api/send-notification', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'welcome',
+                            to: email,
+                            clientName: laverieName
+                        })
+                    });
+                } catch (emailError) {
+                    console.log('Email de bienvenue non envoyé:', emailError);
+                }
 
                 showAlert('Compte créé avec succès ! Redirection...', 'success');
                 setTimeout(() => window.location.href = 'login.html', 1500);
